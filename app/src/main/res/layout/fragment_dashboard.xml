@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.dashboard.DashboardFragment">
 
-    <SurfaceView
+    <com.example.theescapeplan.GameView
         android:id="@+id/gameScreen"
         android:layout_width="411dp"
         android:layout_height="732dp"
