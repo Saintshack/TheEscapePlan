@@ -1,4 +1,5 @@
 package com.example.theescapeplan.ui.dashboard
+import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
@@ -16,6 +17,9 @@ class DashboardFragment : Fragment() {
         // Create GameView programmatically
         gameView = GameView(requireContext())
 
+        val prefs = requireContext().getSharedPreferences("game_data", Context.MODE_PRIVATE)
+        gameView.loadCoins(prefs)
+
         // GestureDetector to handle swipes
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 100
@@ -24,7 +28,6 @@ class DashboardFragment : Fragment() {
             override fun onDown(e: MotionEvent): Boolean {
                 return true
             }
-
             override fun onFling(
                 e1: MotionEvent?,
                 e2: MotionEvent,
@@ -41,6 +44,7 @@ class DashboardFragment : Fragment() {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) gameView.moveRight()
                         else gameView.moveLeft()
+                        gameView.update()
                         return true
                     }
                 } else {
@@ -48,6 +52,7 @@ class DashboardFragment : Fragment() {
                     if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffY > 0) gameView.moveDown()
                         else gameView.moveUp()
+                        gameView.update()
                         return true
                     }
                 }
