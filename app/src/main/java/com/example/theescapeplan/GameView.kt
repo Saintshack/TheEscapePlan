@@ -57,7 +57,7 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
         .scale(screenWidth, screenHeight)
     private val playerFrames: Array<Bitmap> = arrayOf(
         BitmapFactory.decodeResource(resources, R.drawable.player).scale(230, 400),
-        BitmapFactory.decodeResource(resources, R.drawable.player).scale(230, 400)
+        BitmapFactory.decodeResource(resources, R.drawable.player2).scale(230, 400)
     )
     private var frameCounter = 0
     private var playerX = 0f
@@ -77,7 +77,7 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
         BitmapFactory.decodeResource(resources, R.drawable.slide_obstacle_one).scale(230, 400),
         BitmapFactory.decodeResource(resources, R.drawable.slide_obstacle_2).scale(230, 400)
     )
-    private val coinBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.coin).scale(100, 100)
+    private val coinBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.coin).scale(230, 400)
     private val obstacleSpacing = 600f
     private var lastObstacleY = 0f
     private var score = 0
@@ -107,6 +107,7 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
                 playerX = lanePositions[currentLaneIndex] - playerFrames[0].width / 2
                 playerY = screenHeight - 500f
                 spawnObstacleRow()
+                spawnCoinRow()
                 lastObstacleY = distanceTraveled.toFloat()
             }
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
@@ -145,17 +146,9 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
         // Spawn obstacles at fixed intervals
         if (distanceTraveled - lastObstacleY >= obstacleSpacing) {
             spawnObstacleRow()
-            lastObstacleY = distanceTraveled.toFloat()
-        }
-
-        if (distanceTraveled - lastObstacleY >= obstacleSpacing) {
-            spawnObstacleRow()
-
-            // --- Also spawn coins sometimes ---
             if (Random.nextFloat() < 0.6f) {  // 60% chance
                 spawnCoinRow()
             }
-
             lastObstacleY = distanceTraveled.toFloat()
         }
 
@@ -241,7 +234,10 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
                 canvas.drawBitmap(obstacle.bitmap, matrix, paint)
             }
             allCoins.toList().forEach { coin ->
-                coin.draw(canvas, paint)
+                val matrix = Matrix()
+                matrix.postScale(coin.scale, coin.scale)
+                matrix.postTranslate(coin.x, coin.y)
+                canvas.drawBitmap(coin.bitmap, matrix, paint)
             }
             val frameIndex = (frameCounter / 10) % playerFrames.size
             val playerBitmap = playerFrames[frameIndex]
@@ -259,6 +255,7 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
             paint.textSize = 60f
             canvas.drawText("Score: $score", 50f, 100f, paint)
             canvas.drawText("Distance: ${distanceTraveled / 100}m", 50f, 180f, paint)
+            canvas.drawText("Total Coins: $coins", 50f, 260f, paint)
         }
         else if (gameState == GameState.GAME_OVER) {
             // --- Black background ---

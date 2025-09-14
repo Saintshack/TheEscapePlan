@@ -17,7 +17,7 @@ class DashboardFragment : Fragment() {
         // Create GameView programmatically
         gameView = GameView(requireContext())
 
-        val prefs = requireContext().getSharedPreferences("game_data", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
         gameView.loadCoins(prefs)
 
         // GestureDetector to handle swipes
