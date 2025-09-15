@@ -31,11 +31,6 @@ data class Coin(
     var scale: Float,
     var laneIndex: Int
 ) {
-    fun draw(canvas: Canvas, paint: Paint) {
-        val dstRect = RectF(x, y, x + width, y + height)
-        canvas.drawBitmap(bitmap, null, dstRect, paint)
-    }
-
     fun update(speed: Float) {
         y += speed
     }
