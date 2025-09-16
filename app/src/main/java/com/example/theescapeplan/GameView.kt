@@ -1,7 +1,7 @@
 package com.example.theescapeplan
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.SurfaceHolder
@@ -9,7 +9,8 @@ import android.view.SurfaceView
 import kotlin.random.Random
 import androidx.core.graphics.scale
 import kotlin.Array
-import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.CompletableDeferred
 
 data class Obstacle(
     var x: Float,
@@ -41,13 +42,25 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
     private var gameThread: Thread? = null
     private var isPlaying = false
     private val surfaceHolder: SurfaceHolder = holder
-    private lateinit var sharedPreferences: SharedPreferences
     private val paint = Paint()
+
+    private val trailImageMap = mapOf(
+        "trail1" to R.drawable.trail_blue,
+        "trail2" to R.drawable.trail_red
+    )
+
+    private val glowImageMap = mapOf(
+        "glow1" to Color.YELLOW,
+        "glow2" to Color.GREEN
+    )
+
+    private val accessoryImageMap = mapOf(
+        "acc1" to R.drawable.hat,
+        "acc2" to R.drawable.scarf
+    )
 
     private val screenWidth = 1100
     private val screenHeight = 2000
-
-
     private val background: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.background)
         .scale(screenWidth, screenHeight)
     private val playerFrames: Array<Bitmap> = arrayOf(
@@ -59,8 +72,6 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
     private var playerY = 0f
     private val lanePositions = floatArrayOf(300f, 550f, 900f)
     private var currentLaneIndex = 1
-
-    private var coins: Int = 0
     private val allCoins = mutableListOf<Coin>()
 
     private val obstacles = mutableListOf<Obstacle>()
@@ -95,7 +106,6 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
 
 
     init {
-        sharedPreferences = context.getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
         surfaceHolder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 startGame()
@@ -103,6 +113,7 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
                 playerY = screenHeight - 500f
                 spawnObstacleRow()
                 spawnCoinRow()
+                PlayerRepository.init(context)
                 lastObstacleY = distanceTraveled.toFloat()
             }
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
@@ -118,17 +129,9 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
         }
     }
 
-    fun loadCoins(prefs: SharedPreferences) {
-        coins = prefs.getInt("coins", 0)
-    }
-
-    fun saveCoins(prefs: SharedPreferences) {
-        prefs.edit { putInt("coins", coins) }
-    }
-
-    fun addCoin(prefs: SharedPreferences, amount: Int = 1) {
-        coins += amount
-        saveCoins(prefs) // immediately save
+    fun addCoin(amount: Int = 1) {
+        PlayerRepository.currentPlayer.coins += amount
+        PlayerRepository.savePlayer()
     }
 
     fun update() {
@@ -234,23 +237,65 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
                 matrix.postTranslate(coin.x, coin.y)
                 canvas.drawBitmap(coin.bitmap, matrix, paint)
             }
+
             val frameIndex = (frameCounter / 10) % playerFrames.size
             val playerBitmap = playerFrames[frameIndex]
+
             // --- Neon Player Effect ---
             val neonPaint = Paint()
             val cycle = (Math.sin(frameCounter * 0.1) * 0.5 + 0.5).toFloat() // 0..1 range
             val neonColor = Color.argb((150 * cycle).toInt(), 255, 0, 255)   // pulsing magenta
-
             neonPaint.colorFilter = PorterDuffColorFilter(neonColor, PorterDuff.Mode.ADD)
 
+            val playerDrawX = playerX
+            val playerDrawY = playerY + jumpOffsetY + slideOffsetY
+
+            val player = PlayerRepository.currentPlayer
+
+// --- TRAIL (still bitmap if you have images) ---
+            if (player.equippedTrail != "None") {
+                val trailBitmap = getBitmapForItem(player.equippedTrail, "trail")
+                canvas.drawBitmap(trailBitmap, playerDrawX, playerDrawY + 100f, null)
+            }
+
+// --- GLOW (now just a color) ---
+            if (player.equippedGlow != "None") {
+                val glowColor = when (player.equippedGlow) {
+                    "Yellow" -> Color.YELLOW
+                    "Green" -> Color.GREEN
+                    else -> Color.MAGENTA // fallback
+                }
+
+                val glowPaint = Paint().apply {
+                    color = glowColor
+                    alpha = 128 // semi-transparent
+                    style = Paint.Style.FILL
+                    isAntiAlias = true
+                }
+
+                // Draw a glowing circle behind the player
+                val glowRadius = 100f // adjust size as needed
+                val glowCenterX = playerDrawX + playerFrames[0].width / 2
+                val glowCenterY = playerDrawY + playerFrames[0].height / 2
+                canvas.drawCircle(glowCenterX, glowCenterY, glowRadius, glowPaint)
+            }
+
+// --- ACCESSORIES (still bitmaps) ---
+            player.ownedAccessories.forEach { accessory ->
+                if (accessory != "None") {
+                    val accBitmap = getBitmapForItem(accessory, "accessory")
+                    canvas.drawBitmap(accBitmap, playerDrawX, playerDrawY, null)
+                }
+            }
+
             // Draw glowing player
-            canvas.drawBitmap(playerBitmap, playerX, playerY + jumpOffsetY + slideOffsetY, neonPaint)
+            canvas.drawBitmap(playerBitmap, playerDrawX, playerDrawY, neonPaint)
 
             paint.color = Color.WHITE
             paint.textSize = 60f
             canvas.drawText("Score: $score", 50f, 100f, paint)
             canvas.drawText("Distance: ${distanceTraveled / 100}m", 50f, 180f, paint)
-            canvas.drawText("Total Coins: $coins", 50f, 260f, paint)
+            canvas.drawText("Total Coins: ${PlayerRepository.currentPlayer.coins}", 50f, 260f, paint)
         }
         else if (gameState == GameState.GAME_OVER) {
             // --- Black background ---
@@ -288,6 +333,27 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
 
         surfaceHolder.unlockCanvasAndPost(canvas)
     }
+
+    // --- Utility function for safe bitmap loading ---
+    @SuppressLint("DiscouragedApi")
+    private fun loadBitmapFromResOrPath(identifier: String): Bitmap {
+        return when {
+            identifier == "None" -> {
+                createBitmap(1, 1) // invisible fallback
+            }
+            identifier.startsWith("res:") -> {
+                // Example: "res:drawable/glow_blue"
+                val resName = identifier.removePrefix("res:")
+                val resId = resources.getIdentifier(resName, null, context.packageName)
+                BitmapFactory.decodeResource(resources, resId)
+            }
+            else -> {
+                // Assume it’s a file path
+                BitmapFactory.decodeFile(identifier)
+            }
+        }
+    }
+
 
     private fun control() { Thread.sleep(17) }
 
@@ -458,11 +524,21 @@ class GameView(context: Context, attrs: AttributeSet? = null) : SurfaceView(cont
 
             if (RectF.intersects(playerRect, coinRect)) {
                 // Player collects the coin
-                addCoin(sharedPreferences, 1)
+                addCoin(1)
                 coinIterator.remove()
             }
         }
     }
+    private fun getBitmapForItem(itemId: String, type: String): Bitmap {
+        val resId = when (type) {
+            "trail" -> trailImageMap[itemId]
+            "glow" -> glowImageMap[itemId]
+            "accessory" -> accessoryImageMap[itemId]
+            else -> null
+        } ?: R.drawable.coin // fallback drawable if ID not found
 
+        return BitmapFactory.decodeResource(resources, resId)
+    }
 
 }
+

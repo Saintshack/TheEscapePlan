@@ -1,7 +1,6 @@
 package com.example.theescapeplan.ui.notifications
 
-import android.content.Context
-import android.content.SharedPreferences
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,15 +12,16 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.theescapeplan.R
 import com.example.theescapeplan.databinding.FragmentNotificationsBinding
+import com.example.theescapeplan.PlayerRepository
 
 data class ShopItem(
     val id: String,
     val name: String,
     val price: Int,
-    val imageRes: Int
+    val imageRes: Int,
+    val type: String   // "skin", "trail", "glow", "accessory"
 )
 
 class NotificationsFragment : Fragment() {
@@ -29,14 +29,13 @@ class NotificationsFragment : Fragment() {
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var prefs: SharedPreferences
-    private var coins: Int = 0
-
     private val shopItems = listOf(
-        ShopItem("skin1", "Cool Skin", 100, R.drawable.coin),
-        ShopItem("skin2", "Neon Skin", 200, R.drawable.coin),
-        ShopItem("trail1", "Blue Trail", 150, R.drawable.coin),
-        ShopItem("trail2", "Red Trail", 180, R.drawable.coin)
+        ShopItem("trail1", "Blue Trail", 10, R.drawable.trail_blue, "trail"),
+        ShopItem("trail2", "Red Trail", 10, R.drawable.trail_red, "trail"),
+        ShopItem("glow1", "Yellow Glow", 5, R.drawable.coin, "glow"),
+        ShopItem("glow2", "Cyan Glow", 5, R.drawable.coin, "glow"),
+        ShopItem("acc1", "Cool Hat", 15, R.drawable.coin, "accessory"),
+        ShopItem("acc2", "Red Scarf", 15, R.drawable.coin, "accessory")
     )
 
     override fun onCreateView(
@@ -44,20 +43,11 @@ class NotificationsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(NotificationsViewModel::class.java)
-
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-        notificationsViewModel.text.observe(viewLifecycleOwner) { }
-
-        prefs = requireContext().getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
-        coins = prefs.getInt("coins", 0)
+        PlayerRepository.init(requireContext())
         updateCoinDisplay()
-
         buildShop()
-
         return root
     }
 
@@ -126,10 +116,13 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun buyItem(item: ShopItem) {
-        if (coins >= item.price) {
-            coins -= item.price
-            prefs.edit().putInt("coins", coins).apply()
-            prefs.edit().putBoolean("${item.id}_owned", true).apply()
+        val success = when (item.type) {
+            "trail" -> PlayerRepository.buyTrail(item.id, item.price)
+            "glow" -> PlayerRepository.buyGlow(item.id, item.price)
+            "accessory" -> PlayerRepository.buyAccessory(item.id, item.price)
+            else -> false
+        }
+        if (success) {
             updateCoinDisplay()
             Toast.makeText(requireContext(), "Purchased ${item.name}!", Toast.LENGTH_SHORT).show()
         } else {
@@ -137,17 +130,22 @@ class NotificationsFragment : Fragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun updateCoinDisplay() {
-        binding.tvCoins.text = "Coins: $coins"
+        binding.tvCoins.text = "Coins: ${PlayerRepository.currentPlayer.coins}"
     }
 
     private fun buildShop() {
         binding.shopContainer.removeAllViews()
-        addSectionLabel("Skins")
-        shopItems.filter { it.id.startsWith("skin") }.forEach { addShopItem(it) }
+
         addSectionLabel("Trails")
-        shopItems.filter { it.id.startsWith("trail") }.forEach { addShopItem(it) }
-        println(shopItems.size)
+        shopItems.filter { it.type == "trail" }.forEach { addShopItem(it) }
+
+        addSectionLabel("Glows")
+        shopItems.filter { it.type == "glow" }.forEach { addShopItem(it) }
+
+        addSectionLabel("Accessories")
+        shopItems.filter { it.type == "accessory" }.forEach { addShopItem(it) }
     }
 
     override fun onDestroyView() {

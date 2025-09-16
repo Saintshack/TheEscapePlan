@@ -1,5 +1,4 @@
 package com.example.theescapeplan.ui.dashboard
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
@@ -16,10 +15,6 @@ class DashboardFragment : Fragment() {
     ): View? {
         // Create GameView programmatically
         gameView = GameView(requireContext())
-
-        val prefs = requireContext().getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
-        gameView.loadCoins(prefs)
-
         // GestureDetector to handle swipes
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 100

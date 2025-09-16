@@ -3,8 +3,11 @@ package com.example.theescapeplan
 data class Player(
     val id: String,
     var name: String,
-    var skin: String,
-    var trail: String,
-    var color: Int,
-    var coins: Int
+    var avatarRes: String,  // Path to currently equipped skin
+    var equippedTrail: String,
+    var equippedGlow: String,
+    var coins: Int,
+    var ownedTrails: MutableList<String> = mutableListOf(),
+    var ownedGlows: MutableList<String> = mutableListOf(),
+    var ownedAccessories: MutableList<String> = mutableListOf(),
 )

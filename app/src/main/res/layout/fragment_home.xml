@@ -1,7 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment"/>
+    android:background="#121212"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:divider="?android:attr/dividerHorizontal"
+        android:showDividers="middle">
+
+        <!-- Player Info -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:id="@+id/imgAvatar"
+                android:layout_width="100dp"
+                android:layout_height="200dp"
+                android:src="@drawable/player"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/darker_gray"
+                android:padding="4dp"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tvPlayerName"
+                    android:text="Player1"
+                    android:textSize="20sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginBottom="4dp" android:layout_height="100dp" android:layout_width="100dp"/>
+
+                <TextView
+                    android:id="@+id/tvCoins"
+                    android:text="Coins: 0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/holo_orange_light" android:layout_height="120dp" android:layout_width="100dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Owned Trails -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Owned Trails"
+            android:textSize="18sp"
+            android:textColor="@android:color/holo_green_light"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="2dp"/>
+
+        <ListView
+            android:id="@+id/listOwnedTrails"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:dividerHeight="8dp"/>
+
+        <!-- Glow -->
+        <TextView
+            android:id="@+id/glowLabel"
+            android:text="Glow"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="8dp" android:layout_height="100dp" android:layout_width="100dp"/>
+
+        <ListView
+            android:id="@+id/listOwnedGlows"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:dividerHeight="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/glowContainer"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:padding="8dp"/>
+
+        <!-- Accessories -->
+        <TextView
+            android:id="@+id/accessoryLabel"
+            android:text="Accessories"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" android:layout_height="100dp" android:layout_width="100dp"/>
+
+    </LinearLayout>
+</ScrollView>
