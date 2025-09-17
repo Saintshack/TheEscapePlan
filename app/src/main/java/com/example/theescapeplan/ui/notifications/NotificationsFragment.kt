@@ -30,12 +30,10 @@ class NotificationsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val shopItems = listOf(
-        ShopItem("trail1", "Blue Trail", 10, R.drawable.trail_blue, "trail"),
-        ShopItem("trail2", "Red Trail", 10, R.drawable.trail_red, "trail"),
-        ShopItem("glow1", "Yellow Glow", 5, R.drawable.coin, "glow"),
-        ShopItem("glow2", "Cyan Glow", 5, R.drawable.coin, "glow"),
-        ShopItem("acc1", "Cool Hat", 15, R.drawable.coin, "accessory"),
-        ShopItem("acc2", "Red Scarf", 15, R.drawable.coin, "accessory")
+        ShopItem("Blue Trail", "Blue Trail", 10, R.drawable.trail_blue, "trail"),
+        ShopItem("Red Trail", "Red Trail", 10, R.drawable.trail_red, "trail"),
+        ShopItem("Yellow Glow", "Yellow Glow", 5, R.drawable.yellow, "glow"),
+        ShopItem("Green Glow", "Green Glow", 5, R.drawable.green, "glow"),
     )
 
     override fun onCreateView(
@@ -54,7 +52,7 @@ class NotificationsFragment : Fragment() {
     private fun addSectionLabel(title: String) {
         val label = TextView(requireContext()).apply {
             text = title
-            setTextColor(Color.CYAN)
+            setTextColor(Color.BLACK)
             textSize = 20f
             setPadding(16, 24, 16, 16)
             layoutParams = LinearLayout.LayoutParams(
@@ -119,7 +117,6 @@ class NotificationsFragment : Fragment() {
         val success = when (item.type) {
             "trail" -> PlayerRepository.buyTrail(item.id, item.price)
             "glow" -> PlayerRepository.buyGlow(item.id, item.price)
-            "accessory" -> PlayerRepository.buyAccessory(item.id, item.price)
             else -> false
         }
         if (success) {
@@ -143,9 +140,6 @@ class NotificationsFragment : Fragment() {
 
         addSectionLabel("Glows")
         shopItems.filter { it.type == "glow" }.forEach { addShopItem(it) }
-
-        addSectionLabel("Accessories")
-        shopItems.filter { it.type == "accessory" }.forEach { addShopItem(it) }
     }
 
     override fun onDestroyView() {

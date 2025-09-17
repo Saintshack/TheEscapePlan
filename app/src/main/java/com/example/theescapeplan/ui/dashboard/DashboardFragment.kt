@@ -13,9 +13,7 @@ class DashboardFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Create GameView programmatically
         gameView = GameView(requireContext())
-        // GestureDetector to handle swipes
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 100
             private val SWIPE_VELOCITY_THRESHOLD = 100
@@ -35,7 +33,6 @@ class DashboardFragment : Fragment() {
                 val diffY = e2.y - e1.y
 
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    // Horizontal swipe
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) gameView.moveRight()
                         else gameView.moveLeft()
@@ -43,7 +40,6 @@ class DashboardFragment : Fragment() {
                         return true
                     }
                 } else {
-                    // Vertical swipe
                     if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffY > 0) gameView.moveDown()
                         else gameView.moveUp()
@@ -53,14 +49,22 @@ class DashboardFragment : Fragment() {
                 }
                 return false
             }
-        })
 
-        // Intercept touch events and pass to gestureDetector
+            override fun onSingleTapConfirmed(event: MotionEvent): Boolean {
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    if (gameView.gameState == GameView.GameState.GAME_OVER) {
+                        gameView.resetGame()
+                        return true
+                    }
+                }
+                return true
+            }
+
+        })
         gameView.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             true
         }
-
         return gameView
     }
 
@@ -71,6 +75,6 @@ class DashboardFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        gameView.stopGame() // safe stop
+        gameView.stopGame()
     }
 }

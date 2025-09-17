@@ -11,7 +11,7 @@ object PlayerRepository {
     private lateinit var prefs: SharedPreferences
     private val gson = Gson()
 
-    var currentPlayer: Player = Player("1", "Player1", "res/drawable/player.png", "None", "None", 0)
+    var currentPlayer: Player = Player("1", "Player1", "res/drawable/player.png", "None", "None", 20)
         private set
 
     fun init(context: Context) {
@@ -26,10 +26,10 @@ object PlayerRepository {
                 gson.fromJson(json, Player::class.java)
             } catch (e: Exception) {
                 e.printStackTrace()
-                Player("1", "Player1", "res/drawable/player.png", "None", "", 0) // fallback to default
+                Player("1", "Player1", "res/drawable/player.png", "None", "None", 20)
             }
         } else {
-            Player("1", "Player1", "res/drawable/player.png", "None", "", 0) // first time user
+            Player("1", "Player1", "res/drawable/player.png", "None", "None", 20)
         }
     }
 
@@ -69,19 +69,17 @@ object PlayerRepository {
         return false
     }
 
-    fun buyAccessory(accId: String, cost: Int): Boolean {
-        if (spendCoins(cost)) {
-            currentPlayer.ownedAccessories.add(accId)
-            savePlayer()
-            return true
-        }
-        return false
-    }
-
 
     fun equipTrail(trailId: String) {
-        if (currentPlayer.ownedTrails.contains(trailId)) {
+        if (currentPlayer.ownedTrails.contains(trailId) || trailId == "None") {
             currentPlayer.equippedTrail = trailId
+            savePlayer()
+        }
+    }
+
+    fun equipGlow(glowId: String) {
+        if (currentPlayer.ownedGlows.contains(glowId) || glowId == "None") {
+            currentPlayer.equippedGlow = glowId
             savePlayer()
         }
     }

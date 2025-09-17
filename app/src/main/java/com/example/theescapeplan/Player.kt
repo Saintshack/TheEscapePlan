@@ -9,5 +9,4 @@ data class Player(
     var coins: Int,
     var ownedTrails: MutableList<String> = mutableListOf(),
     var ownedGlows: MutableList<String> = mutableListOf(),
-    var ownedAccessories: MutableList<String> = mutableListOf(),
 )
