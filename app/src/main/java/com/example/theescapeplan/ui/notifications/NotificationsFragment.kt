@@ -21,7 +21,7 @@ data class ShopItem(
     val name: String,
     val price: Int,
     val imageRes: Int,
-    val type: String   // "skin", "trail", "glow", "accessory"
+    val type: String
 )
 
 class NotificationsFragment : Fragment() {
@@ -64,53 +64,67 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun addShopItem(item: ShopItem) {
-        val itemLayout = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(16, 16, 16, 16)
-            setBackgroundColor(Color.parseColor("#1E1E1E"))
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            params.setMargins(0, 0, 0, 24)
-            layoutParams = params
+        var hasItem = false
+        if(item.type=="trail"){
+            if(PlayerRepository.currentPlayer.ownedTrails.contains(item.id)){
+                hasItem = true
+            }
         }
-
-        val image = ImageView(requireContext()).apply {
-            setImageResource(item.imageRes)
-            layoutParams = LinearLayout.LayoutParams(150, 150)
+        else if(item.type=="glow"){
+            if(PlayerRepository.currentPlayer.ownedGlows.contains(item.id)){
+                hasItem = true
+            }
         }
+        if(!hasItem) {
+            val itemLayout = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(16, 16, 16, 16)
+                setBackgroundColor(Color.parseColor("#1E1E1E"))
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.setMargins(0, 0, 0, 24)
+                layoutParams = params
+            }
 
-        val textContainer = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            setPadding(24, 0, 0, 0)
+            val image = ImageView(requireContext()).apply {
+                setImageResource(item.imageRes)
+                layoutParams = LinearLayout.LayoutParams(150, 150)
+            }
+
+            val textContainer = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams =
+                    LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                setPadding(24, 0, 0, 0)
+            }
+
+            val nameText = TextView(requireContext()).apply {
+                text = item.name
+                setTextColor(Color.WHITE)
+                textSize = 18f
+            }
+
+            val priceText = TextView(requireContext()).apply {
+                text = "Price: ${item.price}"
+                setTextColor(Color.YELLOW)
+                textSize = 16f
+            }
+
+            val buyButton = Button(requireContext()).apply {
+                text = "Buy"
+                setOnClickListener { buyItem(item) }
+            }
+
+            textContainer.addView(nameText)
+            textContainer.addView(priceText)
+            itemLayout.addView(image)
+            itemLayout.addView(textContainer)
+            itemLayout.addView(buyButton)
+
+            binding.shopContainer.addView(itemLayout)
         }
-
-        val nameText = TextView(requireContext()).apply {
-            text = item.name
-            setTextColor(Color.WHITE)
-            textSize = 18f
-        }
-
-        val priceText = TextView(requireContext()).apply {
-            text = "Price: ${item.price}"
-            setTextColor(Color.YELLOW)
-            textSize = 16f
-        }
-
-        val buyButton = Button(requireContext()).apply {
-            text = "Buy"
-            setOnClickListener { buyItem(item) }
-        }
-
-        textContainer.addView(nameText)
-        textContainer.addView(priceText)
-        itemLayout.addView(image)
-        itemLayout.addView(textContainer)
-        itemLayout.addView(buyButton)
-
-        binding.shopContainer.addView(itemLayout)
     }
 
     private fun buyItem(item: ShopItem) {
